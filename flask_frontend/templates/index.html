@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Ad Rewriting Agent</title>
+        <link rel="stylesheet" href="/static/style.css" />
+    </head>
+    <body>
+        <header>
+            <h1>Welcome to the Ad Rewriting Agent</h1>
+        </header>
+        <main>
+            <form action="/rewrite" method="POST">
+                <label for="original_text">Original Text:</label>
+                <textarea
+                    id="original_text"
+                    name="original_text"
+                    required
+                ></textarea>
+
+                <label for="target_tone">Target Tone:</label>
+                <select id="target_tone" name="target_tone" required>
+                    <option value="professional">Professional</option>
+                    <option value="fun">Fun</option>
+                    <option value="casual">Casual</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="luxury">Luxury</option>
+                    <option value="friendly">Friendly</option>
+                </select>
+
+                <label>Target Platforms:</label>
+                <input
+                    type="checkbox"
+                    name="target_platforms"
+                    value="facebook"
+                />
+                Facebook
+                <input type="checkbox" name="target_platforms" value="google" />
+                Google
+                <input
+                    type="checkbox"
+                    name="target_platforms"
+                    value="instagram"
+                />
+                Instagram
+                <input
+                    type="checkbox"
+                    name="target_platforms"
+                    value="linkedin"
+                />
+                LinkedIn
+                <input
+                    type="checkbox"
+                    name="target_platforms"
+                    value="twitter"
+                />
+                Twitter
+                <input type="checkbox" name="target_platforms" value="tiktok" />
+                TikTok
+
+                <label for="brand_context">Brand Context (optional):</label>
+                <input type="text" id="brand_context" name="brand_context" />
+
+                <label for="target_audience">Target Audience (optional):</label>
+                <input
+                    type="text"
+                    id="target_audience"
+                    name="target_audience"
+                />
+
+                <button type="submit">Rewrite Ad</button>
+            </form>
+        </main>
+        <footer>
+            <p>&copy; 2023 Ad Rewriting Agent</p>
+        </footer>
+    </body>
+</html>

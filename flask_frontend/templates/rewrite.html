@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rewrite Results</title>
+        <link rel="stylesheet" href="/static/style.css" />
+    </head>
+    <body>
+        <header>
+            <h1>Ad Rewrite Results</h1>
+        </header>
+        <main>
+            {% if result %}
+            <section>
+                <h2>Original Text</h2>
+                <p>{{ result.original_text }}</p>
+            </section>
+            <section>
+                <h2>Rewritten Text</h2>
+                <p><strong>Tone Applied:</strong> {{ result.tone_applied }}</p>
+                <p>
+                    <strong>Confidence Score:</strong> {{
+                    result.confidence_score }}
+                </p>
+            </section>
+            <section>
+                <h2>Platform Optimizations</h2>
+                <ul>
+                    {% for opt in result.platform_optimizations %}
+                    <li>
+                        <h3>{{ opt.platform }}</h3>
+                        <p>
+                            <strong>Optimized Text:</strong> {{
+                            opt.optimized_text }}
+                        </p>
+                        <p>
+                            <strong>Character Count:</strong> {{
+                            opt.character_count }}
+                        </p>
+                        <p>
+                            <strong>Predicted CTR:</strong> {{
+                            opt.performance_prediction.click_through_rate }}
+                        </p>
+                        {% if opt.recommendations %}
+                        <p>
+                            <strong>Recommendations:</strong> {{
+                            opt.recommendations | join(', ') }}
+                        </p>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            <section>
+                <h2>Insights</h2>
+                <ul>
+                    {% for insight in result.overall_insights %}
+                    <li>{{ insight }}</li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% elif error %}
+            <section>
+                <h2>Error</h2>
+                <p>{{ error }}</p>
+            </section>
+            {% else %}
+            <section>
+                <h2>No Results</h2>
+                <p>Submit a request to see rewritten ad text and insights.</p>
+            </section>
+            {% endif %}
+        </main>
+        <footer>
+            <p>&copy; 2023 Ad Rewriting Agent</p>
+        </footer>
+    </body>
+</html>
