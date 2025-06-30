@@ -8,7 +8,7 @@
     </head>
     <body>
         <header>
-            <h1>Welcome to the Ad Rewriting Agent</h1>
+            <h1>Zocket Assignment Demo</h1>
         </header>
         <main>
             <form action="/rewrite" method="POST">
@@ -29,35 +29,57 @@
                     <option value="friendly">Friendly</option>
                 </select>
 
-                <label>Target Platforms:</label>
-                <input
-                    type="checkbox"
-                    name="target_platforms"
-                    value="facebook"
-                />
-                Facebook
-                <input type="checkbox" name="target_platforms" value="google" />
-                Google
-                <input
-                    type="checkbox"
-                    name="target_platforms"
-                    value="instagram"
-                />
-                Instagram
-                <input
-                    type="checkbox"
-                    name="target_platforms"
-                    value="linkedin"
-                />
-                LinkedIn
-                <input
-                    type="checkbox"
-                    name="target_platforms"
-                    value="twitter"
-                />
-                Twitter
-                <input type="checkbox" name="target_platforms" value="tiktok" />
-                TikTok
+                <label>
+                    Target Platforms:
+                </label>
+                <div>
+                    <input
+                        type="checkbox"
+                        name="target_platforms"
+                        value="facebook"
+                    />
+                    <label for="facebook">Facebook</label>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        name="target_platforms"
+                        value="google"
+                    />
+                    <label for="google">Google</label>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        name="target_platforms"
+                        value="instagram"
+                    />
+                    <label for="instagram">Instagram</label>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        name="target_platforms"
+                        value="linkedin"
+                    />
+                    <label for="linkedin">LinkedIn</label>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        name="target_platforms"
+                        value="twitter"
+                    />
+                    <label for="twitter">Twitter</label>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        name="target_platforms"
+                        value="tiktok"
+                    />
+                    <label for="tiktok">TikTok</label>
+                </div>
 
                 <label for="brand_context">Brand Context (optional):</label>
                 <input type="text" id="brand_context" name="brand_context" />
@@ -72,8 +94,5 @@
                 <button type="submit">Rewrite Ad</button>
             </form>
         </main>
-        <footer>
-            <p>&copy; 2023 Ad Rewriting Agent</p>
-        </footer>
     </body>
 </html>
