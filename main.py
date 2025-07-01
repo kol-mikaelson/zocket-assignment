@@ -422,7 +422,7 @@ class AdRewritingAgent:
         if char_counts:
             avg_chars = sum(char_counts) / len(char_counts)
         else:
-            avg_chars = 0  # Or handle this case appropriately based on your application's needs
+            avg_chars = 0
 
         if avg_chars < 50:
             insights.append("Consider adding more descriptive content to increase engagement")
