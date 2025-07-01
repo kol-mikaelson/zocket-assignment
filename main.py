@@ -5,18 +5,14 @@ import json
 from datetime import datetime
 import uvicorn
 from enum import Enum
-import asyncio
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Load environment variables
 load_dotenv()
 
-# Initialize FastAPI app
 app = FastAPI(title="Ad Text Rewriting Agent", version="1.0.0")
 
-# Enums for validation
 class ToneType(str, Enum):
     PROFESSIONAL = "professional"
     FUN = "fun"
@@ -33,7 +29,6 @@ class PlatformType(str, Enum):
     TWITTER = "twitter"
     TIKTOK = "tiktok"
 
-# Request/Response Models
 class AdRewriteRequest(BaseModel):
     original_text: str
     target_tone: ToneType
@@ -57,7 +52,6 @@ class AdRewriteResponse(BaseModel):
     confidence_score: float
     timestamp: str
 
-# Knowledge Graph Structure (Simplified)
 class KnowledgeGraph:
     def __init__(self):
         self.platform_constraints = {
@@ -126,10 +120,8 @@ class KnowledgeGraph:
             }
         }
 
-# Initialize Knowledge Graph
 kg = KnowledgeGraph()
 
-# Memory Module for Pattern Recognition
 class AgentMemory:
     def __init__(self):
         self.successful_rewrites = []
@@ -137,7 +129,6 @@ class AgentMemory:
         self.pattern_insights = {}
 
     def store_rewrite(self, request: AdRewriteRequest, response: AdRewriteResponse, feedback_score: Optional[float] = None):
-        """Store successful rewrites for pattern learning"""
         memory_entry = {
             "timestamp": datetime.now().isoformat(),
             "original_text": request.original_text,
@@ -147,12 +138,9 @@ class AgentMemory:
             "feedback_score": feedback_score
         }
         self.successful_rewrites.append(memory_entry)
-
-        # Update pattern insights
         self._update_patterns(request, response)
 
     def _update_patterns(self, request: AdRewriteRequest, response: AdRewriteResponse):
-        """Update pattern recognition based on successful rewrites"""
         key = f"{request.target_tone}_{len(request.target_platforms)}"
         if key not in self.pattern_insights:
             self.pattern_insights[key] = {"count": 0, "avg_confidence": 0}
@@ -161,10 +149,8 @@ class AgentMemory:
         current["count"] += 1
         current["avg_confidence"] = (current["avg_confidence"] * (current["count"] - 1) + response.confidence_score) / current["count"]
 
-# Initialize Agent Memory
 memory = AgentMemory()
 
-# LLM Service using OpenAI client with OpenRouter
 class LLMService:
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
@@ -175,7 +161,6 @@ class LLMService:
         self.site_url = os.getenv("SITE_URL", "http://localhost:8000")
         self.site_name = os.getenv("SITE_NAME", "Ad Rewriting Agent")
 
-        # Initialize OpenAI client with OpenRouter
         self.client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=self.api_key,
@@ -185,15 +170,11 @@ class LLMService:
                              brand_context: Optional[str] = None,
                              target_audience: Optional[str] = None,
                              char_limit: int = None) -> str:
-        """Generate rewritten ad text using OpenAI client"""
-
-        # Construct detailed prompt
         prompt = self._build_rewrite_prompt(
             original_text, tone, platform, brand_context, target_audience, char_limit
         )
 
         try:
-            # Use OpenAI client with OpenRouter
             completion = self.client.chat.completions.create(
                 extra_headers={
                     "HTTP-Referer": self.site_url,
@@ -216,8 +197,6 @@ class LLMService:
             )
 
             generated_text = completion.choices[0].message.content
-
-            # Clean up the response
             rewritten_text = self._clean_llm_response(generated_text, char_limit)
             return rewritten_text
 
@@ -237,8 +216,6 @@ class LLMService:
     def _build_rewrite_prompt(self, original_text: str, tone: str, platform: str,
                             brand_context: Optional[str], target_audience: Optional[str],
                             char_limit: Optional[int]) -> str:
-        """Build comprehensive prompt for LLM rewriting"""
-
         tone_instructions = {
             "professional": "Use formal, authoritative language. Focus on expertise, results, and value propositions. Avoid casual language and excessive punctuation.",
             "fun": "Use energetic, playful language with emojis. Create excitement and enthusiasm. Use exclamation points and engaging questions.",
@@ -249,12 +226,12 @@ class LLMService:
         }
 
         platform_guidelines = {
-            "facebook": f"Character limit: 125. Use engaging questions, emojis, and clear CTAs. Encourage comments and shares.",
-            "google": f"Character limit: 90. Focus on keywords and clear value propositions. Include location if relevant.",
-            "instagram": f"Character limit: 125. Use visual storytelling language and relevant hashtags. Appeal to aesthetics.",
-            "linkedin": f"Character limit: 150. Use professional language and industry insights. Focus on business value.",
-            "twitter": f"Character limit: 280. Use trending topics and hashtags. Create shareable, concise messages.",
-            "tiktok": f"Character limit: 100. Use youth-oriented language and trends. Create viral, engaging content."
+            "facebook": "Character limit: 125. Use engaging questions, emojis, and clear CTAs. Encourage comments and shares.",
+            "google": "Character limit: 90. Focus on keywords and clear value propositions. Include location if relevant.",
+            "instagram": "Character limit: 125. Use visual storytelling language and relevant hashtags. Appeal to aesthetics.",
+            "linkedin": "Character limit: 150. Use professional language and industry insights. Focus on business value.",
+            "twitter": "Character limit: 280. Use trending topics and hashtags. Create shareable, concise messages.",
+            "tiktok": "Character limit: 100. Use youth-oriented language and trends. Create viral, engaging content."
         }
 
         prompt = f"""
@@ -282,24 +259,17 @@ Return ONLY the rewritten ad text, no explanations or quotes.
         return prompt
 
     def _clean_llm_response(self, response: str, char_limit: Optional[int] = None) -> str:
-        """Clean and format LLM response"""
-        # Remove quotes if present
         cleaned = response.strip().strip('"').strip("'")
-
-        # Remove any explanatory text that might be included
         lines = cleaned.split('\n')
-        # Take the first substantial line as the ad text
         for line in lines:
             if line.strip() and len(line.strip()) > 10:
                 cleaned = line.strip()
                 break
 
-        # Enforce character limit if specified
         if char_limit and len(cleaned) > char_limit:
-            # Truncate at the last complete word within limit
             truncated = cleaned[:char_limit]
             last_space = truncated.rfind(' ')
-            if last_space > char_limit * 0.8:  # Only truncate at word boundary if it's not too short
+            if last_space > char_limit * 0.8:
                 cleaned = truncated[:last_space] + "..."
             else:
                 cleaned = truncated + "..."
@@ -307,7 +277,6 @@ Return ONLY the rewritten ad text, no explanations or quotes.
         return cleaned
 
     async def analyze_text_quality(self, original: str, rewritten: str, tone: str) -> Dict[str, float]:
-        """Analyze the quality of rewritten text"""
         analysis_prompt = f"""
 Analyze these two ad texts and provide scores from 0.0 to 1.0:
 
@@ -339,12 +308,10 @@ Respond with ONLY a JSON object:
 
             analysis_text = completion.choices[0].message.content
 
-            # Extract JSON from response
             try:
                 scores = json.loads(analysis_text.strip())
                 return scores
             except json.JSONDecodeError:
-                # Fallback scores if JSON parsing fails
                 return {
                     "tone_consistency": 0.7,
                     "message_preservation": 0.8,
@@ -355,7 +322,6 @@ Respond with ONLY a JSON object:
         except Exception as e:
             print(f"Analysis error: {e}")
 
-        # Default scores if analysis fails
         return {
             "tone_consistency": 0.7,
             "message_preservation": 0.8,
@@ -363,14 +329,12 @@ Respond with ONLY a JSON object:
             "platform_optimization": 0.75
         }
 
-# Initialize LLM Service
 try:
     llm_service = LLMService()
 except ValueError as e:
     print(f"Warning: {e}")
     llm_service = None
 
-# Core Agent Logic
 class AdRewritingAgent:
     def __init__(self, knowledge_graph: KnowledgeGraph, memory: AgentMemory, llm_service: LLMService):
         self.kg = knowledge_graph
@@ -378,21 +342,16 @@ class AdRewritingAgent:
         self.llm = llm_service
 
     async def rewrite_ad_text(self, request: AdRewriteRequest) -> AdRewriteResponse:
-        """Main agent function to rewrite ad text using LLM"""
         if not self.llm:
             raise HTTPException(status_code=500, detail="LLM service not available - check API key configuration")
 
         request_id = f"req_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
-        # Generate platform optimizations using LLM
         platform_optimizations = []
 
-        # Process each platform with LLM-powered rewriting
         for platform in request.target_platforms:
             platform_info = self.kg.platform_constraints[platform]
             char_limit = platform_info["max_chars"]
 
-            # Generate optimized text using LLM
             optimized_text = await self.llm.generate_rewrite(
                 original_text=request.original_text,
                 tone=request.target_tone.value,
@@ -402,16 +361,12 @@ class AdRewritingAgent:
                 char_limit=char_limit
             )
 
-            # Create platform optimization object
             optimization = await self._create_platform_optimization(
                 optimized_text, platform, request.target_tone, request.original_text
             )
             platform_optimizations.append(optimization)
 
-        # Generate overall insights using LLM analysis
         insights = await self._generate_llm_insights(request, platform_optimizations)
-
-        # Calculate confidence score based on LLM analysis
         confidence = await self._calculate_llm_confidence(request, platform_optimizations)
 
         response = AdRewriteResponse(
@@ -424,33 +379,26 @@ class AdRewritingAgent:
             timestamp=datetime.now().isoformat()
         )
 
-        # Store in memory for pattern learning
         self.memory.store_rewrite(request, response)
-
         return response
 
     async def _create_platform_optimization(self, optimized_text: str, platform: PlatformType,
                                           tone: ToneType, original_text: str) -> PlatformOptimization:
-        """Create platform optimization with LLM-powered analysis"""
         platform_info = self.kg.platform_constraints[platform]
         best_practices = platform_info["best_practices"]
         tone_multiplier = platform_info["tone_multipliers"].get(tone.value, 1.0)
 
-        # Generate recommendations based on best practices
         recommendations = []
         for practice in best_practices:
             if practice.lower() not in optimized_text.lower():
                 recommendations.append(f"Consider adding: {practice}")
 
-        # Get quality analysis from LLM
         quality_scores = await self.llm.analyze_text_quality(original_text, optimized_text, tone.value)
 
-        # Enhanced performance prediction using LLM quality scores
         base_ctr = 0.08
         base_engagement = 0.12
         base_conversion = 0.05
 
-        # Apply quality multipliers
         quality_multiplier = (quality_scores["engagement_potential"] + quality_scores["platform_optimization"]) / 2
 
         performance_prediction = {
@@ -469,19 +417,18 @@ class AdRewritingAgent:
         )
 
     async def _generate_llm_insights(self, request: AdRewriteRequest, optimizations: List[PlatformOptimization]) -> List[str]:
-        """Generate insights using LLM analysis"""
         insights = []
-
-        # Analyze character usage across platforms
         char_counts = [opt.character_count for opt in optimizations]
-        avg_chars = sum(char_counts) / len(char_counts)
+        if char_counts:
+            avg_chars = sum(char_counts) / len(char_counts)
+        else:
+            avg_chars = 0  # Or handle this case appropriately based on your application's needs
 
         if avg_chars < 50:
             insights.append("Consider adding more descriptive content to increase engagement")
         elif avg_chars > 120:
             insights.append("Text might be too long for some platforms - consider more concise messaging")
 
-        # Analyze tone-platform alignment
         problematic_combos = []
         if request.target_tone == ToneType.PROFESSIONAL and PlatformType.TIKTOK in request.target_platforms:
             problematic_combos.append("TikTok + Professional tone")
@@ -491,7 +438,6 @@ class AdRewritingAgent:
         if problematic_combos:
             insights.append(f"Potential tone-platform misalignment: {', '.join(problematic_combos)}")
 
-        # Quality-based insights
         avg_quality_scores = {}
         for opt in optimizations:
             quality_scores = opt.performance_prediction.get("quality_scores", {})
@@ -500,7 +446,6 @@ class AdRewritingAgent:
                     avg_quality_scores[key] = []
                 avg_quality_scores[key].append(value)
 
-        # Generate insights based on quality scores
         for metric, scores in avg_quality_scores.items():
             avg_score = sum(scores) / len(scores)
             if avg_score < 0.6:
@@ -511,32 +456,27 @@ class AdRewritingAgent:
                 elif metric == "platform_optimization":
                     insights.append("Platform-specific optimizations could be enhanced")
 
-        # Performance prediction insights
         avg_ctr = sum(opt.performance_prediction["click_through_rate"] for opt in optimizations) / len(optimizations)
         if avg_ctr > 0.10:
             insights.append("High predicted performance - excellent tone-platform alignment")
         elif avg_ctr < 0.05:
             insights.append("Performance could be improved with better platform targeting")
 
-        return insights[:5]  # Limit to top 5 insights
+        return insights[:5]
 
     async def _calculate_llm_confidence(self, request: AdRewriteRequest, optimizations: List[PlatformOptimization]) -> float:
-        """Calculate confidence score using LLM quality analysis"""
         quality_scores = []
 
         for opt in optimizations:
             opt_quality = opt.performance_prediction.get("quality_scores", {})
             if opt_quality:
-                # Average the quality metrics
                 avg_quality = sum(opt_quality.values()) / len(opt_quality.values())
                 quality_scores.append(avg_quality)
 
         if not quality_scores:
-            return 0.7  # Default confidence
+            return 0.7
 
         base_confidence = sum(quality_scores) / len(quality_scores)
-
-        # Adjust based on platform-tone alignment
         alignment_bonus = 0.0
         for opt in optimizations:
             platform_info = self.kg.platform_constraints[opt.platform]
@@ -544,26 +484,22 @@ class AdRewritingAgent:
             if tone_multiplier > 1.0:
                 alignment_bonus += 0.02
 
-        # Consider memory patterns
         pattern_key = f"{request.target_tone}_{len(request.target_platforms)}"
         pattern_bonus = 0.0
         if pattern_key in self.memory.pattern_insights:
             pattern_confidence = self.memory.pattern_insights[pattern_key]["avg_confidence"]
-            pattern_bonus = (pattern_confidence - 0.7) * 0.1  # Small adjustment based on history
+            pattern_bonus = (pattern_confidence - 0.7) * 0.1
 
         final_confidence = min(0.95, base_confidence + alignment_bonus + pattern_bonus)
-        return max(0.1, final_confidence)  # Ensure minimum confidence
+        return max(0.1, final_confidence)
 
-# Initialize Agent (with error handling)
 if llm_service:
     agent = AdRewritingAgent(kg, memory, llm_service)
 else:
     agent = None
 
-# API Routes
 @app.post("/run-agent", response_model=AdRewriteResponse)
 async def run_agent(request: AdRewriteRequest):
-    """Main agent endpoint to rewrite ad text using LLM"""
     if not agent:
         raise HTTPException(status_code=500, detail="Agent not initialized - check environment variables")
 
@@ -571,7 +507,7 @@ async def run_agent(request: AdRewriteRequest):
         response = await agent.rewrite_ad_text(request)
         return response
     except HTTPException:
-        raise  # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         import traceback
         print(f"Unexpected error: {traceback.format_exc()}")
@@ -579,7 +515,6 @@ async def run_agent(request: AdRewriteRequest):
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
@@ -589,7 +524,6 @@ async def health_check():
 
 @app.get("/agent-stats")
 async def get_agent_stats():
-    """Get agent performance statistics"""
     return {
         "total_rewrites": len(memory.successful_rewrites),
         "pattern_insights": memory.pattern_insights,
@@ -604,13 +538,10 @@ async def get_agent_stats():
 
 @app.post("/feedback")
 async def submit_feedback(request_id: str, feedback_score: float):
-    """Submit feedback for a specific rewrite (for improvement loop)"""
-    # In production, this would update the memory with feedback
     return {"message": "Feedback received", "request_id": request_id, "score": feedback_score}
 
 @app.get("/example")
 async def get_example():
-    """Get an example request for testing"""
     return {
         "example_request": {
             "original_text": "Buy our product now! Great deals available!",
@@ -623,7 +554,6 @@ async def get_example():
 
 @app.post("/test-llm")
 async def test_llm_connection():
-    """Test LLM connectivity"""
     if not llm_service:
         return {
             "status": "error",
